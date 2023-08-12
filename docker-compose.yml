@@ -1,6 +1,7 @@
 version: '3.5'
 
 services:
+
   nginx:
     image: nginx:stable
     volumes:
@@ -8,12 +9,10 @@ services:
       - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
     ports:
       - "80:80"
-#    networks:
-#      - internet
-#      - appnet
     depends_on:
       - php
     container_name: cont_nginx
+
   php:
     build:
       dockerfile: ./docker/php/Dockerfile
@@ -21,11 +20,10 @@ services:
       - ./:/var/www
     environment:
         - PHP_IDE_CONFIG=serverName=laravelshopserver
-#    networks:
-#      - appnet
     depends_on:
       - db
     container_name: cont_php
+
   db:
     image: mysql:8.0
     #command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
@@ -37,43 +35,24 @@ services:
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-#    networks:
-#        - appnet
     container_name: cont_db
-  adminer:
-    image: adminer
+
+  phpmyadmin:
+    image: phpmyadmin
     restart: always
     ports:
-      - "8080:8080"
-#    networks:
-#        - appnet
-    container_name: cont_adminer
+        - "8181:80"
+    environment:
+        - PMA_ARBITRARY=1
+    depends_on:
+        - db
+
   node:
-    image: node:20.4.0-alpine
-    working_dir: /var/www
-    entrypoint: ["npm"]
-    volumes:
-        - ./:/var/www
     container_name: cont_node
-
-#  node:
-#    # docker-compose run --rm npm install
-#    image: node:14
-#    working_dir: /var/www
-#    entrypoint: ["npm"]
-#    volumes:
-#      - ./:/var/www
-##    networks:
-##        - appnet
-#    depends_on:
-#      - db
-
-#volumes:
-#  db:
-#networks:
-#  internet:
-#    driver: bridge
-#    name: internet
-#  appnet:
-#    driver: bridge
-#    name: appnet
+    build:
+        dockerfile: ./docker/node/Dockerfile
+    tty: true
+    volumes:
+        - ./:/app
+#    ports:
+#        - "5173:5173"
